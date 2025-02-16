@@ -43,7 +43,7 @@ export const addPost = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     // קבלת הנתיב של התמונות שהועלו
-    const imagePaths = req.files ? (req.files as Express.Multer.File[]).map(file => `/images/${file.filename}`) : [];
+    const imagePaths = req.files ? (req.files as Express.Multer.File[]).map(file =>  `http://localhost:3000/images/${file.filename}`) : [];
 
     const newPost = await PostModel.create({
       title,
