@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import PostModel from '../models/Post';
 import User from '../models/User';
 import { Types } from 'mongoose';
+import path from 'path';
+import fs from 'fs';
  
 /*
 export const addPost = async (req: Request, res: Response): Promise<void> => {
@@ -84,7 +86,7 @@ export const getPostById = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: (error as Error).message });
   }
 };
-
+/*
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, content, location, rating, images } = req.body;
@@ -102,6 +104,56 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     res.status(400).json({ message: (error as Error).message });
   }
 };
+*/
+export const updatePost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log(req.body);
+    const { title, content, location, rating } = req.body;
+    let { images } = req.body;
+    const postId = req.params.id;
+
+    if (!postId) {
+      res.status(400).json({ message: "Post ID is required" });
+      return;
+    }
+
+    // חיפוש הפוסט במסד הנתונים
+    const post = await PostModel.findById(postId);
+    if (!post) {
+      res.status(404).json({ message: "Post not found" });
+      return;
+    }
+
+    // לוודא שהתמונות הן מערך (גם אם ריק)
+    if (!images) {
+      images = []; // אם אין תמונות, נשלח מערך ריק כדי שלא יהיה undefined
+    }
+
+    // מציאת תמונות שנמחקו
+    const imagesToRemove = post.images.filter((img: string) => !images.includes(img));
+
+    // מחיקת התמונות מהשרת
+    imagesToRemove.forEach((imagePath: string) => {
+      const localPath = path.join(__dirname, "..", "public", "images", path.basename(imagePath));
+      fs.unlink(localPath, (err: NodeJS.ErrnoException | null) => {
+        if (err) console.error(`Failed to delete image: ${localPath}`, err);
+      });
+    });
+
+    // עדכון הפוסט
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { title, content, location, rating, images, updatedAt: new Date() },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+
 
 export const deletePost = async (req: Request, res: Response): Promise<void> => {
   try {
