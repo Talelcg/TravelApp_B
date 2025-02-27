@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import CommentModel from '../models/Comment';
 import mongoose from 'mongoose';
+import PostModel from '../models/Post'; // Add this line to import PostModel
 
 export const addComment = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -21,6 +22,12 @@ export const addComment = async (req: Request, res: Response): Promise<void> => 
       postId,
       userId,
     });
+    const updatedPost = await PostModel.findByIdAndUpdate(
+      postId,
+      { $inc: { commentsCount: 1 } }, // מגדיל את `commentCount` ב-1
+      { new: true } // מחזיר את המסמך המעודכן
+    );
+
     res.status(201).json(newComment);
   } catch (error) {
     res.status(400).json({ message: (error as Error).message });

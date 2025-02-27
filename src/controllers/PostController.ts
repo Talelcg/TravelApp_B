@@ -86,25 +86,7 @@ export const getPostById = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: (error as Error).message });
   }
 };
-/*
-export const updatePost = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { title, content, location, rating, images } = req.body;
-    const post = await PostModel.findByIdAndUpdate(
-      req.params.id,
-      { title, content, location, rating, images, updatedAt: new Date() },
-      { new: true }
-    );
-    if (!post) {
-      res.status(404).json({ message: 'Post not found' });
-      return;
-    }
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(400).json({ message: (error as Error).message });
-  }
-};
-*/
+
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log(req.body);
@@ -171,35 +153,36 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
 // Like a post// Like or unlike a post
 export const toggleLikePost = async (req: Request, res: Response): Promise<void> => {
   try {
-    const id = req.params.id; // Post ID
-    const userId =  req.params.userId;// User ID from authenticated user
-    console.log('מזהה פוסטטטט:', req.params.id);
-    console.log('מזהה :', req.params.userId);
+    const postId = req.params.id; // מזהה הפוסט
+    const userId = req.params.userId; // מזהה המשתמש
+
     if (!userId) {
       res.status(401).json({ message: "User not authenticated" });
       return;
     }
 
-    const post = await PostModel.findById(id);
+    const post = await PostModel.findById(postId);
     if (!post) {
       res.status(404).json({ message: "Post not found" });
       return;
     }
-    
-    const userObjectId = new Types.ObjectId(userId);
 
-    // If the user has already liked the post, remove the like
-    if (post.likes.includes(userObjectId)) {
-      post.likes = post.likes.filter((like) => !like.equals(userObjectId));
+    const userObjectId = new Types.ObjectId(userId);
+    const likesArray = post.likes.map((id) => id.toString()); // המרת ObjectId למחרוזות
+
+    if (likesArray.includes(userObjectId.toString())) {
+      // אם המשתמש כבר עשה לייק, נסיר אותו
+      post.likes = post.likes.filter((id) => id.toString() !== userObjectId.toString());
       await post.save();
-      res.status(200).json({ message: "Post unliked", likes: post.likes });
+      res.status(200).json({ message: "Post unliked", likes: post.likes.map(id => id.toString()) });
     } else {
-      // Otherwise, add the like
+      // אחרת נוסיף אותו
       post.likes.push(userObjectId);
       await post.save();
-      res.status(200).json({ message: "Post liked", likes: post.likes });
+      res.status(200).json({ message: "Post liked", likes: post.likes.map(id => id.toString()) });
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
+

@@ -70,5 +70,6 @@ describe('Post Endpoints', () => {
     expect(res.body[0].title).toEqual('My First Post');
     expect(res.body[0].location).toEqual('Tel Aviv');
     expect(res.body[0].rating).toEqual(4);
+    expect(res.body[0].commentsCount).toEqual(0);
   });
 });

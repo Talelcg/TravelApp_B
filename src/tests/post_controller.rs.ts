@@ -75,7 +75,6 @@ describe("Posts Tests", () => {
     expect(response.body.content).toBe("Test Content");
     expect(response.body.location).toBe("Tel Aviv");
     expect(response.body.rating).toBe(4);
-    expect(response.body.commentsCount).toBe(0);
     postId = response.body._id;
   });
 
@@ -86,7 +85,6 @@ describe("Posts Tests", () => {
     expect(response.body.content).toBe("Test Content");
     expect(response.body.location).toBe("Tel Aviv");
     expect(response.body.rating).toBe(4);
-    expect(response.body.commentsCount).toBe(0);
   });
 
   test("Test Create Post 2", async () => {
@@ -100,7 +98,7 @@ describe("Posts Tests", () => {
         rating: 3,
         images: [],
         commentsCount: 0
-      });
+      });  
 
     expect(response.statusCode).toBe(201);
     expect(response.body.title).toBe("Test Post 2");
@@ -137,11 +135,36 @@ describe("Posts Tests", () => {
 
 
   test("Test Like Post", async () => {
-    const response = await request(app)
-      .post(`/posts/${postId}`)
+    // יצירת פוסט לבדיקה
+    const createPostResponse = await request(app)
+      .post("/posts")
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        title: "Like Test Post",
+        content: "Testing likes",
+        location: "Jerusalem",
+        rating: 5,
+        images: [],
+        commentsCount: 0
+      });
+  
+    expect(createPostResponse.statusCode).toBe(201);
+    const postId = createPostResponse.body._id;
+  
+    // ביצוע לייק לפוסט
+    const likeResponse = await request(app)
+      .post(`/posts/${postId}`) // שים לב לנתיב המתוקן בהתאם לנתב שלך
       .set('Authorization', `Bearer ${accessToken}`);
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body.likes).toContainEqual(expect.objectContaining({ userId: expect.any(String) }));
+  
+    expect(likeResponse.statusCode).toBe(200);
+    expect(likeResponse.body.likes).toEqual(
+      expect.arrayContaining([expect.any(String)]) // בודק אם יש ID ברשימת הלייקים
+    );
+  
+    // בדיקה אם המשתמש נוסף לרשימת הלייקים של הפוסט
+    const getPostResponse = await request(app).get(`/posts/${postId}`);
+    expect(getPostResponse.statusCode).toBe(200);
+    expect(getPostResponse.body.likes).toContainEqual(expect.any(String));
   });
+  
 });
