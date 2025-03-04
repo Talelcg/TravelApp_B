@@ -74,19 +74,36 @@ describe("Comments Tests", () => {
     expect(response.body.content).toBe("Test Comment");
     commentId = response.body._id;
   }); 
-  test("Test Get All Comments by Post ID", async () => { 
+  test("Test Get All Comments by Post ID", async () => {
+    // צור תגובה כדי לוודא שיש תגובות לפוסט
+    const createCommentResponse = await request(app)
+      .post(`/comments`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        content: "Another Test Comment",
+        postId: postId,
+      });
+  
+    expect(createCommentResponse.statusCode).toBe(201);
+  
+    // עכשיו נסה לשלוף את התגובות שוב
     const response = await request(app)
       .get(`/comments/${postId}`)
       .set('Authorization', `Bearer ${accessToken}`);
+  
     expect(response.statusCode).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThanOrEqual(1);
   
     response.body.forEach((comment: any) => {
-      expect(comment.postId.toString()).toBe(postId); // ensure postId is correct
+      expect(comment).toHaveProperty("_id");
+      expect(comment).toHaveProperty("content");
+      expect(comment).toHaveProperty("postId");
+      expect(comment).toHaveProperty("userId");
+      expect(comment.postId.toString()).toBe(postId);
     });
   });
- 
+  
 
   test("Test Update Comment", async () => {
     const response = await request(app)

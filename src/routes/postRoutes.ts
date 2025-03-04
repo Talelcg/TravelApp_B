@@ -208,10 +208,10 @@ const router = Router();
 router.post("/",authMiddleware, upload.array("images", 5), addPost);
 router.get('/', getAllPosts);
 router.get('/:id', getPostById);
-router.put('/:id', authMiddleware, updatePost);
+router.put('/:id', authMiddleware, upload.array("images", 5), updatePost);
 router.delete('/:id', authMiddleware, deletePost);
 
 // קריאה ללייק/הסרת לייק לפוסט
-router.post('/:id/like', authMiddleware, toggleLikePost);
+router.post('/:id/', authMiddleware, toggleLikePost);
 
 export default router;
