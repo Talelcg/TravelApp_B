@@ -48,7 +48,7 @@ export const getCommentsByPost = async (req: Request, res: Response): Promise<vo
     const comments = await CommentModel.find({ postId: new mongoose.Types.ObjectId(postId) });
 
     if (comments.length === 0) {
-      res.status(404).json({ message: 'No comments found for this post' });
+      res.status(200).json([]);
       return;
     }
 

@@ -168,6 +168,20 @@ const logout = async (req: Request, res: Response) => {
         res.status(400).json({ error: err });
     }
 };
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const user = await userModel.findById(req.params.id).select('-password -refreshToken'); // מסיר את השדות הרגישים
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        res.json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
 
 const refresh = async (req: Request, res: Response) => {
     try {
@@ -230,5 +244,5 @@ export default {
     register,
     login,
     refresh,
-    logout,getUsernameById
+    logout,getUsernameById,getUserById
 };

@@ -6,8 +6,8 @@ export interface IUser {
   _id?: string;
   refreshToken?: string[];
   username: string;
-
-  
+  profileImage?: string;
+  bio?: string; // Add the bio field to the IUser interface
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema<IUser>({
   refreshToken: {
     type: [String],
     default: [],
+  },
+  profileImage: {
+    type: String,
+    default: "", // Default to an empty string if no image is provided
+  },
+  bio: {
+    type: String,
+    default: "I'm using EAZYTRAVEL", // Default bio value
   }
 });
 
@@ -52,7 +60,15 @@ export default userModel;
 * password:
 * type: string
 * description: The user password
+* profileImage:
+* type: string
+* description: The user's profile image URL
+* bio:
+* type: string
+* description: The user's bio
 * example:
 * email: 'bob@gmail.com'
 * password: '123456'
+* profileImage: 'https://example.com/profile.jpg'
+* bio: "I'm using EAZYTRAVEL"
 */

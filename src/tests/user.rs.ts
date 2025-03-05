@@ -62,5 +62,10 @@ describe('User Endpoints', () => {
     expect(res.body).toHaveProperty('username', 'user2');
   });
 
-  
+  it('should return 404 for non-existing user', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const res = await request(app).get(`/users/${nonExistentId}`);
+    expect(res.statusCode).toEqual(404);
+    expect(res.body).toHaveProperty('message', 'User not found');
+  });
 });

@@ -1,40 +1,11 @@
 import { Request, Response } from 'express';
 import PostModel from '../models/Post';
 import User from '../models/User';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import path from 'path';
 import fs from 'fs';
  
-/*
-export const addPost = async (req: Request, res: Response): Promise<void> => {
-  
-  try {
-    const { title, content, location, rating, images } = req.body;
 
-    const userId = req.params.userId; 
-    if (!userId) {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
-
-    const newPost = await PostModel.create({
-      title,
-      content,
-      userId,
-      location,
-      rating,
-      images,
-      likes: [],
-      commentsCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    res.status(201).json(newPost);
-  } catch (error) {
-    res.status(400).json({ message: (error as Error).message });
-  }
-};*/
 export const addPost = async (req: Request, res: Response): Promise<void> => {
   
   try {
@@ -182,6 +153,34 @@ export const toggleLikePost = async (req: Request, res: Response): Promise<void>
       res.status(200).json({ message: "Post liked", likes: post.likes.map(id => id.toString()) });
     }
   } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const getPostsByUserId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    
+    // ודא שהמזהה של המשתמש נמצא
+    if (!userId) {
+      res.status(400).json({ message: "User ID is required" });
+      return;
+    }
+
+    // חיפוש הפוסטים לפי מזהה המשתמש
+    const posts = await PostModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+
+    // אם אין פוסטים עבור המשתמש, החזר הודעה מתאימה
+    if (posts.length === 0) {
+      res.status(404).json({ message: "No posts found for this user" });
+      return;
+    }
+
+    // החזרת הפוסטים שנמצאו
+    res.status(200).json(posts);
+  } catch (error: any) {
+    // טיפול בשגיאות
     res.status(500).json({ error: error.message });
   }
 };

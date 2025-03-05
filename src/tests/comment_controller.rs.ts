@@ -125,6 +125,7 @@ describe("Comments Tests", () => {
  
  const response2 = await request(app).get(`/comments/${commentId}`)
     .set('Authorization', `Bearer ${accessToken}`); 
-  expect(response2.statusCode).toBe(404);
+    expect(response2.statusCode).toBe(200);
+    expect(response2.body).toEqual([]);
   })
 });
