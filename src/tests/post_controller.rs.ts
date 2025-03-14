@@ -166,5 +166,53 @@ describe("Posts Tests", () => {
     expect(getPostResponse.statusCode).toBe(200);
     expect(getPostResponse.body.likes).toContainEqual(expect.any(String));
   });
+  test("Test Get Posts By UserId", async () => {
+    // הרשמת משתמש חדש
+    await request(app).post('/users/register').send(testUser);
+    
+    // התחברות עם המשתמש
+    const loginRes = await request(app).post('/users/login').send({
+      email: testUser.email,
+      password: testUser.password,
+    });
+  
+    expect(loginRes.statusCode).toBe(200);
+    accessToken = loginRes.body.accessToken;
+  
+    // שליפת ה- userId
+    const user = await userModel.findOne({ email: testUser.email });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const userId = user._id.toString();
+    
+    // יצירת פוסט עם ה- userId של המשתמש
+    const createPostResponse = await request(app)
+      .post("/posts")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "User's Post",
+        content: "Content of user's post",
+        location: "Tel Aviv",
+        rating: 4,
+        images: [],
+        commentsCount: 0,
+        userId,  // שמירת ה- userId בתוך הפוסט
+      });
+  
+    expect(createPostResponse.statusCode).toBe(201);
+  
+    // שליפת פוסטים לפי ה- userId
+    const getPostsResponse = await request(app)
+      .get(`/posts/user/${userId}`) // שינוי נתיב כדי להתאים לפונקציה שלך
+      .set("Authorization", `Bearer ${accessToken}`);
+  
+    expect(getPostsResponse.statusCode).toBe(200);
+    expect(getPostsResponse.body.length).toBeGreaterThan(0);  // בודק אם יש לפחות פוסט אחד
+    expect(getPostsResponse.body[0].title).toBe("User's Post");
+    expect(getPostsResponse.body[0].content).toBe("Content of user's post");
+    expect(getPostsResponse.body[0].location).toBe("Tel Aviv");
+    expect(getPostsResponse.body[0].rating).toBe(4);
+  });
   
 });

@@ -113,6 +113,39 @@ const router = Router();
  *         description: Server error
  */
 
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Fetches user details by user ID
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The user ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 username:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.post('/logout', authController.logout);

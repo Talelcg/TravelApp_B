@@ -5,7 +5,8 @@ import {
   getPostById,
   updatePost,
   deletePost, 
-   toggleLikePost,  // הוספת הפונקציה החדשה
+   toggleLikePost,
+   getPostsByUserId,  
 
 } from '../controllers/PostController';
 import { authMiddleware } from '../controllers/authcontroller';
@@ -202,6 +203,28 @@ const router = Router();
  *                     type: string
  *                   example: ["userId1", "userId2"]
  * 
+ * /posts/user/{userId}:
+ *   get:
+ *     summary: Get all posts by a specific user
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the user whose posts are to be retrieved
+ *     responses:
+ *       200:
+ *         description: List of posts by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: User ID is required
  */
 
 //router.post('/', authMiddleware, addPost);
@@ -213,5 +236,6 @@ router.delete('/:id', authMiddleware, deletePost);
 
 // קריאה ללייק/הסרת לייק לפוסט
 router.post('/:id/', authMiddleware, toggleLikePost);
-
+// קריאה לקבלת כל הפוסטים של משתמש מסוים
+router.get('/user/:userId', getPostsByUserId);
 export default router;
