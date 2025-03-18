@@ -32,11 +32,11 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   profileImage: {
     type: String,
-    default: "", // Default to an empty string if no image is provided
+    default: "" , // Default to an empty string if no image is provided
   },
   bio: {
     type: String,
-    default: "I'm using EAZYTRAVEL", // Default bio value
+    default: "I'm using EASYTRAVEL", // Default bio value
   }
 });
 
@@ -70,5 +70,5 @@ export default userModel;
 * email: 'bob@gmail.com'
 * password: '123456'
 * profileImage: 'https://example.com/profile.jpg'
-* bio: "I'm using EAZYTRAVEL"
+* bio: "I'm using EASYTRAVEL"
 */

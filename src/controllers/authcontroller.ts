@@ -73,6 +73,7 @@ const generateToken = (userId: string): tTokens | null => {
 };
 const login = async (req: Request, res: Response) => {
     try {
+        console.log("here")
         const user = await userModel.findOne({ email: req.body.email });
         if (!user) {
             res.status(400).send('wrong username or password');
@@ -84,6 +85,7 @@ const login = async (req: Request, res: Response) => {
             return;
         }
         if (!process.env.TOKEN_SECRET) {
+            console.log("bli")
             res.status(500).send('Server Error');
             return;
         }
@@ -168,6 +170,32 @@ const logout = async (req: Request, res: Response) => {
         res.status(400).json({ error: err });
     }
 };
+
+export const updateProfilePicture = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      if (!req.file) {
+        res.status(400).json({ message: "No image uploaded" });
+        return;
+      }
+  
+      // Save the relative path to the database
+      const newProfilePictureUrl = `http://localhost:3000/profile_pictures/${req.file.filename}`;
+      console.log(userId)
+      const user = await userModel.findByIdAndUpdate(userId, { profileImage: newProfilePictureUrl }, { new: true });
+
+      console.log(newProfilePictureUrl)
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+  
+      res.json({ message: "Profile picture updated successfully", profileImage: newProfilePictureUrl });
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
         const user = await userModel.findById(req.params.id).select('-password -refreshToken'); // מסיר את השדות הרגישים
@@ -240,9 +268,37 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     });
 };
 
+export const updateBio = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const { bio } = req.body;
+  
+      if (!bio) {
+        res.status(400).json({ message: "Bio cannot be empty" });
+        return;
+      }
+  
+      const updatedUser = await userModel.findByIdAndUpdate(
+        userId,
+        { bio },
+        { new: true } // ✅ Return updated user
+      );
+  
+      if (!updatedUser) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+  
+      res.json({ message: "Bio updated successfully", bio: updatedUser.bio });
+    } catch (error) {
+      console.error("Error updating bio:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
 export default {
     register,
     login,
     refresh,
-    logout,getUsernameById,getUserById
+    logout,getUsernameById,getUserById,updateBio,updateProfilePicture
 };
