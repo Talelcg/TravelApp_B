@@ -15,9 +15,9 @@ if (!process.env.MONGO_URI) {
   throw new Error('MONGO_URI is not defined in the .env file');
 }
 
-if (!process.env.GOOGLE_API_KEY) {
-  throw new Error('GOOGLE_API_KEY is not defined in the .env file');
-}
+// if (!process.env.GOOGLE_API_KEY) {
+//   throw new Error('GOOGLE_API_KEY is not defined in the .env file');
+// }
 
 const app = express();
 
@@ -35,7 +35,7 @@ app.use('/comments', commentRoutes);
 
 // Serve static images
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
-
+app.use('/profile_pictures', express.static(path.join(__dirname, '../public/profile_pictures')));
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
