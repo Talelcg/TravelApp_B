@@ -21,46 +21,8 @@ const upload = multer({ storage });
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
+router.post('/google', authController.googleLogin);
 
-router.post('/google', async (req: Request, res: Response): Promise<void> => {
-    const { credential } = req.body;
-  
-    try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-  
-      const payload = ticket.getPayload();
-      if (!payload?.email) {
-        res.status(400).json({ message: 'Invalid Google token' });
-        return;
-      }
-  
-      let user = await User.findOne({ email: payload.email });
-      if (!user) {
-        user = await User.create({
-          email: payload.email,
-          username: payload.name,
-          profilePicture: payload.picture,
-          password: 'google',
-          bio: ''
-        });
-      }
-  
-      const accessToken = jwt.sign(
-        { userId: user._id },
-        process.env.TOKEN_SECRET!,
-        { expiresIn: '1h' }
-      );
-  
-      res.status(200).json({ accessToken, user });
-    } catch (error) {
-      console.error('Google login error:', error);
-      res.status(500).json({ message: 'Google login failed' });
-    }
-  });
-  
 
 // Other routes...
 router.post('/login', authController.login);

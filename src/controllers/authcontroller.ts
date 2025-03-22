@@ -7,6 +7,58 @@ import { Document } from 'mongoose';
 
 
 
+import { OAuth2Client } from 'google-auth-library';
+// ...other imports
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const googleLogin = async (req: Request, res: Response): Promise<void> => {
+  const { credential } = req.body;
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload?.email) {
+      res.status(400).json({ message: 'Invalid Google token' });
+      return;
+    }
+
+    let user = await userModel.findOne({ email: payload.email });
+
+    if (!user) {
+      user = await userModel.create({
+        email: payload.email,
+        username: payload.name,
+        profileImage: payload.picture,
+        password: 'google',
+        bio: '',
+      });
+    }
+
+    const tokens = generateToken(user._id);
+    if (!tokens) {
+      res.status(500).send('Token generation failed');
+      return;
+    }
+
+    if (!user.refreshToken) user.refreshToken = [];
+    user.refreshToken.push(tokens.refreshToken);
+    await user.save();
+
+    res.status(200).json({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: { _id: user._id, username: user.username, profileImage: user.profileImage }
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ message: 'Google login failed' });
+  }
+};
 
 export const getUsernameById = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -300,5 +352,5 @@ export default {
     register,
     login,
     refresh,
-    logout,getUsernameById,getUserById,updateBio,updateProfilePicture
+    logout,getUsernameById,getUserById,updateBio,updateProfilePicture,googleLogin
 };
