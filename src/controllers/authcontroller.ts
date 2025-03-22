@@ -162,7 +162,6 @@ const login = async (req: Request, res: Response) => {
             return;
         }
         if (!process.env.TOKEN_SECRET) {
-            console.log("bli")
             res.status(500).send('Server Error');
             return;
         }
@@ -258,10 +257,7 @@ export const updateProfilePicture = async (req: Request, res: Response): Promise
   
       // Save the relative path to the database
       const newProfilePictureUrl = `http://localhost:3000/profile_pictures/${req.file.filename}`;
-      console.log(userId)
       const user = await userModel.findByIdAndUpdate(userId, { profileImage: newProfilePictureUrl }, { new: true });
-
-      console.log(newProfilePictureUrl)
       if (!user) {
         res.status(404).json({ message: "User not found" });
         return;

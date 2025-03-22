@@ -60,7 +60,6 @@ export const getPostById = async (req: Request, res: Response): Promise<void> =>
 
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log(req.body);
     const { title, content, location, rating } = req.body;
     let { images } = req.body;
     const postId = req.params.id;
