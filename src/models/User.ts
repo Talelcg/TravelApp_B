@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   profileImage: {
     type: String,
-    default: "" , // Default to an empty string if no image is provided
+    default: "https://www.w3schools.com/w3images/avatar2.png" , // Default to an empty string if no image is provided
   },
   bio: {
     type: String,
