@@ -25,6 +25,7 @@ router.post('/google', authController.googleLogin);
 
 
 // Other routes...
+router.post("/update-username/:userId", authController.updateUsername);
 router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.post('/logout', authController.logout);

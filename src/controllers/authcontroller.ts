@@ -74,7 +74,33 @@ export const getUsernameById = async (req: Request, res: Response): Promise<void
     }
 };
 
-
+export const updateUsername = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const { username } = req.body;
+  
+      if (!username) {
+        res.status(400).json({ message: "Username cannot be empty" });
+        return;
+      }
+  
+      const updatedUser = await userModel.findByIdAndUpdate(
+        userId,
+        { username },
+        { new: true }
+      );
+  
+      if (!updatedUser) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+      res.json({ message: "Username updated successfully", username: updatedUser.username });
+    } catch (error) {
+      console.error("Error updating username:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+  
 
 
 
@@ -125,7 +151,6 @@ const generateToken = (userId: string): tTokens | null => {
 };
 const login = async (req: Request, res: Response) => {
     try {
-        console.log("here")
         const user = await userModel.findOne({ email: req.body.email });
         if (!user) {
             res.status(400).send('wrong username or password');
@@ -352,5 +377,6 @@ export default {
     register,
     login,
     refresh,
+    updateUsername,
     logout,getUsernameById,getUserById,updateBio,updateProfilePicture,googleLogin
 };
