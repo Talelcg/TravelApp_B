@@ -1,175 +1,74 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
 import authController from "../controllers/authcontroller";
-const router = Router();
 import multer from "multer";
 import path from "path";
 
-
-/**
- * @swagger
- * tags:
- *   - name: Auth
- *     description: The Authentication API
- */
-
-/**
- * @swagger
- * /users/register:
- *   post:
- *     summary: Registers a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/models/User'
- *           example:
- *             username: "john_doe"
- *             email: "john@example.com"
- *             password: "password123"
- *     responses:
- *       200:
- *         description: The newly created user
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/models/User'
- *           example:
- *             _id: "60c72b1f9e3d3c19e2f4b08c"
- *             username: "john_doe"
- *             email: "john@example.com"
- */
-
-/**
- * @swagger
- * /users/login:
- *   post:
- *     summary: Logs in a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/models/User'
- *           example:
- *             email: "john@example.com"
- *             password: "password123"
- *     responses:
- *       200:
- *         description: The access and refresh tokens
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/models/Tokens'
- *           example:
- *             accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjAwM2RkZWYxY2E5ZDQxYTg1NTUyZjc1MGEiLCJpYXQiOjE2NjY2ODc1NTZ9.NKn-2wFFIu1x6fDxjmZ9ae3x0_oYZjdjx-1TxQNEvxM"
- *             refreshToken: "d5da2dfb5b02310a810bbb083f3d319ae"
- */
-
-/**
- * @swagger
- * /users/logout:
- *   get:
- *     summary: Logs out a user
- *     tags: [Auth]
- *     description: Provide the refresh token in the authorization header.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout completed successfully
- *         content:
- *           application/json:
- *             example:
- *               message: "Logout completed successfully"
- */
-
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     summary: Fetches the username by user ID
- *     tags: [Auth]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The user ID
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successfully retrieved the user's username
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 username:
- *                   type: string
- *                   example: "john_doe"
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
- */
-
-
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     summary: Fetches user details by user ID
- *     tags: [Auth]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: The user ID
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successfully retrieved user details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                 username:
- *                   type: string
- *                 email:
- *                   type: string
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
- */
-
+// ... Swagger comments ...
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, path.join(__dirname, "../../public/profile_pictures")); // Saves images inside public/profile_pictures
-    },
-    filename: (req, file, cb) => {
-      cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../../public/profile_pictures"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const router = Router();
+
+router.post('/google', async (req: Request, res: Response): Promise<void> => {
+    const { credential } = req.body;
+  
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+  
+      const payload = ticket.getPayload();
+      if (!payload?.email) {
+        res.status(400).json({ message: 'Invalid Google token' });
+        return;
+      }
+  
+      let user = await User.findOne({ email: payload.email });
+      if (!user) {
+        user = await User.create({
+          email: payload.email,
+          username: payload.name,
+          profilePicture: payload.picture,
+          password: 'google',
+          bio: ''
+        });
+      }
+  
+      const accessToken = jwt.sign(
+        { userId: user._id },
+        process.env.TOKEN_SECRET!,
+        { expiresIn: '1h' }
+      );
+  
+      res.status(200).json({ accessToken, user });
+    } catch (error) {
+      console.error('Google login error:', error);
+      res.status(500).json({ message: 'Google login failed' });
     }
   });
   
-  
-  const upload = multer({ storage });
+
+// Other routes...
 router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.post('/logout', authController.logout);
 router.post('/refresh', authController.refresh);
-// router.get('/:id', authController.getUsernameById);
 router.get('/:id', authController.getUserById);
 router.post("/upload-profile-picture/:userId", upload.single("profilePicture"), authController.updateProfilePicture);
-router.post("/update-bio/:userId",authController.updateBio);
-
+router.post("/update-bio/:userId", authController.updateBio);
 
 export default router;
